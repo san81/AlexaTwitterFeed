@@ -16,6 +16,8 @@ var T = new Twit({
    access_token_secret:  '4E8wyO55TGEVgAf7VL49mVQSUjAavDfmgKn0DUkHhBe2W'
 });
 
+
+
 exports.handler = function (event, context) {
     try {
         console.log("event.session.application.applicationId=" + event.session.application.applicationId);
@@ -83,10 +85,18 @@ function onIntent(intentRequest, session, callback) {
 
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
-
+    
     // Dispatch to your skill's intent handlers
     if ("MyColorIsIntent" === intentName) {
-        setColorInSession(intent, session, callback);
+        
+             T.get('search/tweets', { q: 'Arun Gupta', count: 2 }, function(err, data, response) {
+                var twfeed="";
+                for(var i = 0; i < data.statuses.length; i++) {
+                    twfeed+=data.statuses[i].text;
+                }
+                setColorInSession(intent, session, callback,twfeed);
+            });
+          
     } else if ("WhatsMyColorIntent" === intentName) {
         getColorFromSession(intent, session, callback);
     } else if ("HelpIntent" === intentName) {
@@ -128,7 +138,7 @@ function getWelcomeResponse(callback) {
 /**
  * Sets the color in the session and prepares the speech to reply to the user.
  */
-function setColorInSession(intent, session, callback) {
+function setColorInSession(intent, session, callback,twfeed) {
     var cardTitle = intent.name;
     var favoriteColorSlot = intent.slots.Color;
     var repromptText = "";
@@ -142,14 +152,8 @@ function setColorInSession(intent, session, callback) {
         //speechOutput = "I now know your favorite color is " + favoriteColor + ". You can ask me "
         //        + "your favorite color by saying, what's my favorite color?";
         
-        speechOutput='';
-        T.get('search/tweets', { q: 'Arun Gupta', count: 2 }, function(err, data, response) {
-            //console.log(data)
-          for(var i = 0; i < data.statuses.length; i++) {
-            speechOutput=data.statuses[i].text;
-           }
-        });
-        //speechOutput = "Modi government releases socio-economic caste census for better policy-making";
+        speechOutput=twfeed;
+        speechOutput+="Modi government releases socio-economic caste census for better policy-making";
         repromptText = "You can ask me your favorite color by saying, what's my favorite color?";
     } else {
         speechOutput = "I'm not sure what your favorite color is, please try again";
