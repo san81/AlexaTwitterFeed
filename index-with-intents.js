@@ -72,16 +72,8 @@ function onLaunch(launchRequest, session, callback) {
     console.log("onLaunch requestId=" + launchRequest.requestId
                 + ", sessionId=" + session.sessionId);
 
-    T.get('statuses/home_timeline', {  count:5 }, function(err, data, response) {
-                var twfeed="";
-                for(var i = 0; i < data.length; i++) {
-                    twfeed+=data[i].user.screen_name+" says, "+data[i].text+" .  ";
-                }
-                twfeed=twfeed.replace(urlExpression,'web-url')
-                // Dispatch to your skill's launch.
-                getWelcomeResponse(callback,twfeed);
-            });
-    
+    // Dispatch to your skill's launch.
+    getWelcomeResponse(callback);
 }
 
 /**
@@ -97,8 +89,14 @@ function onIntent(intentRequest, session, callback) {
     // Dispatch to your skill's intent handlers
     if ("MyColorIsIntent" === intentName) {
         
+             T.get('statuses/home_timeline', {  count:5 }, function(err, data, response) {
                 var twfeed="";
+                for(var i = 0; i < data.length; i++) {
+                    twfeed+=data[i].user.screen_name+" says "+data[i].text+".  ";
+                }
+                twfeed=twfeed.replace(urlExpression,'weburl')
                 setColorInSession(intent, session, callback,twfeed);
+            });
           
     } else if ("WhatsMyColorIntent" === intentName) {
         getColorFromSession(intent, session, callback);
@@ -121,16 +119,18 @@ function onSessionEnded(sessionEndedRequest, session) {
 
 // --------------- Functions that control the skill's behavior -----------------------
 
-function getWelcomeResponse(callback,twfeed) {
+function getWelcomeResponse(callback) {
     // If we wanted to initialize the session to have some attributes we could add those here.
     var sessionAttributes = {};
     var cardTitle = "Welcome";
-    var speechOutput = twfeed;
+    var speechOutput = "Welcome to the Alexa Skills Kit sample, "
+                + "Please tell me your favorite color by saying, "
+                + "my favorite color is red";
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
     var repromptText = "Please tell me your favorite color by saying, "
                 + "my favorite color is red";
-    var shouldEndSession = true;
+    var shouldEndSession = false;
 
     callback(sessionAttributes,
              buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
